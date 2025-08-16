@@ -72,6 +72,13 @@ class ProgressTracker:
         # Display initial status
         self._display_training_header()
     
+    def start(self):
+        """Start the progress tracker"""
+        logger.info("🚀 Progress tracker started")
+        logger.info(f"📊 Ready to track {self.total_epochs} epochs")
+        logger.info(f"   • Train batches per epoch: {self.total_train_batches}")
+        logger.info(f"   • Val batches per epoch: {self.total_val_batches}")
+    
     def _display_training_header(self):
         """Display the training header with configuration summary"""
         logger.info("\n" + "="*80)
@@ -393,16 +400,24 @@ class OptimizedTrainingTask(pl.LightningModule):
     def on_train_epoch_start(self):
         """Called at the start of each training epoch"""
         if self.progress_tracker:
-            self.progress_tracker.start_epoch(self.current_epoch)
+            # Use the trainer's current epoch if available, otherwise use 0
+            current_epoch = getattr(self.trainer, 'current_epoch', 0) if hasattr(self, 'trainer') else 0
+            self.progress_tracker.start_epoch(current_epoch)
     
     def on_train_epoch_end(self):
         """Called at the end of each training epoch"""
         if self.progress_tracker:
-            # Get current metrics
-            train_metrics = {k: v.item() if hasattr(v, 'item') else v 
-                           for k, v in self.train_metrics.items()}
-            val_metrics = {k: v.item() if hasattr(v, 'item') else v 
-                          for k, v in self.val_metrics.items()}
+            # Get current metrics from the progress tracker
+            train_metrics = getattr(self.progress_tracker, 'train_metrics', {})
+            val_metrics = getattr(self.progress_tracker, 'val_metrics', {})
+            
+            # Ensure metrics are properly formatted
+            if isinstance(train_metrics, dict):
+                train_metrics = {k: v.item() if hasattr(v, 'item') else v 
+                               for k, v in train_metrics.items()}
+            if isinstance(val_metrics, dict):
+                val_metrics = {k: v.item() if hasattr(v, 'item') else v 
+                             for k, v in val_metrics.items()}
             
             self.progress_tracker.end_epoch({
                 'train_metrics': train_metrics,
@@ -413,12 +428,15 @@ class OptimizedTrainingTask(pl.LightningModule):
         """Called when training ends"""
         if self.progress_tracker:
             self.progress_tracker.stop()
-        
-        # Display final training summary
-        total_time = time.time() - self.progress_tracker.start_time if self.progress_tracker else 0
-        logger.info(f"\n🎉 TRAINING COMPLETE!")
-        logger.info(f"Total Time: {total_time/60:.1f} minutes")
-        logger.info(f"Best Validation Accuracy: {self.progress_tracker.best_val_accuracy:.4f}" if self.progress_tracker else "N/A")
+            
+            # Display final training summary
+            total_time = time.time() - self.progress_tracker.start_time
+            logger.info(f"\n🎉 TRAINING COMPLETE!")
+            logger.info(f"Total Time: {total_time/60:.1f} minutes")
+            logger.info(f"Best Validation Accuracy: {self.progress_tracker.best_val_accuracy:.4f}")
+        else:
+            logger.info(f"\n🎉 TRAINING COMPLETE!")
+            logger.info("Progress tracker not available")
     
     def _generate_real_labels(self, batch, outputs):
         """Generate realistic VAP labels based on audio characteristics"""
@@ -509,15 +527,11 @@ class OptimizedTrainingTask(pl.LightningModule):
         # Speaker A ends turn
         if seq_len > 1:
             eot_a = (energy_a[:, :-1] > 0.1) & (energy_a[:, 1:] < 0.05)
-            eot_a = eot_a.to(device)
             eot_labels[:, 1:] = torch.where(eot_a, torch.tensor(1.0, device=device), eot_labels[:, 1:])
             
             # Speaker B ends turn
             eot_b = (energy_b[:, :-1] > 0.1) & (energy_b[:, 1:] < 0.05)
-            eot_b = eot_b.to(device)
             eot_labels[:, 1:] = torch.where(eot_b, torch.tensor(1.0, device=device), eot_labels[:, 1:])
-
-
         
         return eot_labels
     
