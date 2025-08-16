@@ -21,6 +21,7 @@ tqdm>=4.64.0
 pyyaml>=6.0
 hydra-core>=1.3.0
 wandb>=0.15.0
+urllib3<2.0  # Fix for LibreSSL compatibility on macOS
 
 # Development and testing
 pytest>=7.0.0

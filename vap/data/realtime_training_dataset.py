@@ -88,49 +88,78 @@ class RealTrainingDataset(Dataset):
     
     def _load_audio(self, sample):
         """Load and preprocess audio"""
-        audio_path = self.audio_root / sample["audio_path"]
-        audio, sr = sf.read(audio_path)
-        
-        # Convert to mono if stereo
-        if len(audio.shape) > 1:
-            audio = np.mean(audio, axis=1)
-        
-        # Resample to 16kHz if needed
-        if sr != 16000:
-            import librosa
-            audio = librosa.resample(audio, orig_sr=sr, target_sr=16000)
-            sr = 16000
-        
-        # Pad or truncate to max_duration
-        max_samples = int(self.max_duration * sr)
-        if len(audio) > max_samples:
-            audio = audio[:max_samples]
-        else:
-            # Pad with zeros
-            padding = max_samples - len(audio)
-            audio = np.pad(audio, (0, padding), 'constant')
-        
-        return torch.FloatTensor(audio)
+        try:
+            audio_path = self.audio_root / sample["audio_path"]
+            
+            # Debug: check if file exists and is readable
+            if not audio_path.exists():
+                raise FileNotFoundError(f"Audio file not found: {audio_path}")
+            
+            if not audio_path.is_file():
+                raise FileNotFoundError(f"Path is not a file: {audio_path}")
+            
+            # Check file size
+            file_size = audio_path.stat().st_size
+            if file_size == 0:
+                raise ValueError(f"Audio file is empty: {audio_path}")
+            
+            # Try to load the audio
+            audio, sr = sf.read(str(audio_path))
+            
+            # Convert to mono if stereo
+            if len(audio.shape) > 1:
+                audio = np.mean(audio, axis=1)
+            
+            # Resample to 16kHz if needed
+            if sr != 16000:
+                import librosa
+                audio = librosa.resample(audio, orig_sr=sr, target_sr=16000)
+                sr = 16000
+            
+            # Pad or truncate to max_duration
+            max_samples = int(self.max_duration * sr)
+            if len(audio) > max_samples:
+                audio = audio[:max_samples]
+            else:
+                # Pad with zeros
+                padding = max_samples - len(audio)
+                audio = np.pad(audio, (0, padding), 'constant')
+            
+            return torch.FloatTensor(audio)
+            
+        except Exception as e:
+            print(f"Error loading audio from {sample.get('audio_path', 'unknown')}: {e}")
+            print(f"Audio root: {self.audio_root}")
+            print(f"Full path: {audio_path if 'audio_path' in locals() else 'not set'}")
+            print(f"Sample: {sample}")
+            raise
     
     def _create_training_labels(self, audio_a, audio_b):
         """Create realistic training labels that match the expected format"""
-        # Get the actual sequence length from the audio
-        seq_len = len(audio_a)
+        # Calculate the downsampled sequence length
+        # Raw audio: 480000 samples (30s * 16kHz)
+        # Mel spectrogram: 480000/160 = 3000 time steps (100Hz)
+        # Downsampled: 3000/4 = 750 time steps (25Hz)
+        raw_seq_len = len(audio_a)
+        mel_seq_len = raw_seq_len // 160  # hop_length = 160
+        downsampled_seq_len = mel_seq_len // 4  # stride=2 twice
         
         # Create VAP pattern labels (20 classes) - this should match the model's output
-        vap_labels = torch.randint(0, 20, (seq_len,))
+        # The model expects [batch_size, seq_len] but we're creating single samples
+        # So we create [seq_len] and the DataLoader will batch them
+        vap_labels = torch.randint(0, 20, (downsampled_seq_len,))
         
         # Create EoT labels (probability of end-of-turn) - binary labels
-        eot_labels = torch.zeros(seq_len)
+        eot_labels = torch.zeros(downsampled_seq_len)
         
         # Create backchannel labels (probability of backchannel) - binary labels  
-        backchannel_labels = torch.zeros(seq_len)
+        backchannel_labels = torch.zeros(downsampled_seq_len)
         
         # Create overlap labels (probability of overlap) - binary labels
-        overlap_labels = torch.zeros(seq_len)
+        overlap_labels = torch.zeros(downsampled_seq_len)
         
         # Create VAD labels (voice activity for both speakers) - binary labels [seq_len, 2]
-        vad_labels = torch.zeros(seq_len, 2)
+        vad_labels = torch.zeros(downsampled_seq_len, 2)
         vad_labels[:, 0] = 1.0  # Speaker A is always active
         vad_labels[:, 1] = 0.0  # Speaker B is silent
         

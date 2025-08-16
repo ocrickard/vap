@@ -146,7 +146,7 @@ def create_manifest_from_downloaded_data():
         logger.error("❌ LibriSpeech data not found. Please download first.")
         return False
     
-    # Find all audio files
+    # Find all audio files - account for nested structure
     audio_files = list(librispeech_path.rglob("*.flac"))
     logger.info(f"   Found {len(audio_files)} audio files")
     
@@ -159,13 +159,14 @@ def create_manifest_from_downloaded_data():
     for audio_file in audio_files:
         # Extract speaker and chapter info from path
         parts = audio_file.parts
-        if len(parts) >= 4:
+        if len(parts) >= 6:  # Account for nested structure
             speaker_id = parts[-3]  # speaker_id
             chapter_id = parts[-2]  # chapter_id
             filename = parts[-1]    # filename.flac
             
-            # Calculate relative path from LibriSpeech root
-            relative_path = str(audio_file.relative_to(Path("data/realtime_dataset/LibriSpeech")))
+            # Calculate relative path from LibriSpeech root (account for nested structure)
+            # The path should be relative to data/realtime_dataset/LibriSpeech/dev-clean
+            relative_path = str(audio_file.relative_to(Path("data/realtime_dataset/LibriSpeech/dev-clean")))
             
             entry = {
                 "audio_path": relative_path,  # Changed from "audio_file" to match simple_loader.py

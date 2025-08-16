@@ -1,72 +1,61 @@
 #!/bin/bash
-# RunPod Startup Script for VAP Phase 3 Training
-# This script sets up the environment and starts GPU-accelerated training
+# Smart VAP Training Startup Script for RunPod
+# Automatically detects environment and optimizes training
 
 set -e
 
-echo "🚀 Starting VAP Phase 3 Training on RunPod..."
-echo "=============================================="
+echo "🚀 VAP Smart Training Startup"
+echo "=============================="
 
-# Update system packages
-echo "📦 Updating system packages..."
-apt-get update -y
-apt-get install -y git wget curl
+# Check if we're on RunPod
+if [ -d "/workspace" ]; then
+    echo "✅ RunPod environment detected"
+    WORKSPACE="/workspace"
+else
+    echo "💻 Local environment detected"
+    WORKSPACE="."
+fi
 
-# Install Python dependencies
-echo "🐍 Installing Python dependencies..."
-pip install --upgrade pip
-pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
-pip install pytorch-lightning tensorboard tqdm pyyaml numpy requests
+cd $WORKSPACE
 
-# Clone the repository (if not already present)
-if [ ! -d "/workspace/vap" ]; then
+# Clone repository if not exists
+if [ ! -d "vap" ]; then
     echo "📥 Cloning VAP repository..."
-    cd /workspace
-    git clone https://github.com/yourusername/vap.git
+    git clone https://github.com/ocrickard/vap.git
     cd vap
 else
     echo "📁 VAP repository already exists"
-    cd /workspace/vap
+    cd vap
 fi
 
-# Install VAP package
-echo "🔧 Installing VAP package..."
-pip install -e .
+# Make scripts executable
+chmod +x runpod/*.sh
+chmod +x runpod/*.py
 
 # Create necessary directories
-echo "📁 Creating workspace directories..."
-mkdir -p /workspace/data/realtime_dataset
-mkdir -p /workspace/checkpoints/optimized
-mkdir -p /workspace/results
-mkdir -p /workspace/logs
+echo "🏗️  Setting up directory structure..."
+mkdir -p data/realtime_dataset data/realtime_dataset/LibriSpeech data/realtime_dataset/LibriSpeech/dev-clean
+mkdir -p checkpoints/optimized results logs
 
-# Download and setup dataset
-echo "📊 Setting up LibriSpeech dataset..."
-if [ ! -f "/workspace/data/realtime_dataset/manifest.json" ]; then
-    echo "   Downloading dataset (this may take a few minutes)..."
-    python runpod/download_dataset.py
-    
-    if [ $? -eq 0 ]; then
-        echo "✅ Dataset setup complete!"
-    else
-        echo "❌ Dataset setup failed. Please check the logs."
-        exit 1
-    fi
+# Download dataset if not exists
+if [ ! -f "data/realtime_dataset/manifest.json" ]; then
+    echo "📥 Setting up LibriSpeech dataset..."
+    python3 runpod/download_dataset.py
 else
     echo "✅ Dataset already exists"
 fi
 
-# Set environment variables for GPU training
-export CUDA_VISIBLE_DEVICES=0
-export PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:512
+# Set environment variables
+export PYTHONPATH="$WORKSPACE/vap:$PYTHONPATH"
 
-# Display GPU information
-echo "🔥 GPU Information:"
-nvidia-smi
-
-# Start training
-echo "🚀 Starting GPU-accelerated training..."
-cd /workspace/vap
-python runpod/train_on_runpod.py
-
-echo "✅ Training completed!" 
+echo ""
+echo "🎉 SETUP COMPLETE!"
+echo "=================="
+echo "🚀 Start training with: python3 runpod/train_on_runpod.py"
+echo ""
+echo "The system will automatically:"
+echo "  • Detect your environment (local vs RunPod)"
+echo "  • Apply optimal settings for your hardware"
+echo "  • Use consistent training logic across environments"
+echo ""
+echo "Ready to train! 🚀" 

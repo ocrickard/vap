@@ -1,44 +1,45 @@
-# 🚀 Quick Start: Deploy VAP Training to RunPod
+# 🚀 Quick Start: Smart VAP Training
 
-**Get GPU-accelerated training running in 5 minutes!**
+**Train VAP models seamlessly on both local and RunPod environments!**
 
-## ⚡ **5-Minute Deployment**
+## ⚡ **5-Minute Setup**
 
-### **1. Commit RunPod Files (1 min)**
+### **1. Local Development** 💻
 ```bash
-git add runpod/
-git add configs/
-git add vap/
-git commit -m "Add RunPod GPU training configuration"
-git push origin main
+# Clone and setup
+git clone https://github.com/ocrickard/vap.git
+cd vap
+python -m venv vap_env
+source vap_env/bin/activate  # On Windows: vap_env\Scripts\activate
+pip install -r requirements.txt
+
+# Start training (automatically optimized for CPU)
+python runpod/train_on_runpod.py
 ```
 
-### **2. Deploy RunPod Instance (2 min)**
-1. Go to [runpod.io](https://runpod.io)
-2. Click "Deploy" → "GPU Pod"
-3. Select: **RTX 4090** (24GB VRAM, $0.60/hour)
-4. Click "Deploy"
-
-### **3. Start Training (2 min)**
+### **2. RunPod Deployment** 🚀
 ```bash
 # On RunPod, clone and run
 cd /workspace
-git clone https://github.com/yourusername/vap.git
+git clone https://github.com/ocrickard/vap.git
 cd vap
 chmod +x runpod/start_training.sh
 ./runpod/start_training.sh
+
+# Start training (automatically optimized for GPU)
+python runpod/train_on_runpod.py
 ```
 
-**That's it!** 🎉 Training starts automatically.
+**That's it!** 🎉 The same script works everywhere.
 
 ## 🔥 **What Happens Next**
 
-1. **✅ Dependencies Install** (PyTorch, PyTorch Lightning, etc.)
-2. **📥 Dataset Downloads** (LibriSpeech, 337MB, ~2 minutes)
-3. **🏗️ Environment Setup** (directories, manifest generation)
-4. **🚀 GPU Training Starts** (10-25x faster than CPU)
+1. **✅ Environment Detection**: Automatically detects local vs RunPod
+2. **📥 Dataset Setup**: Downloads LibriSpeech (337MB, ~2 minutes)
+3. **⚙️ Smart Configuration**: Applies optimal settings for your hardware
+4. **🚀 Training Starts**: CPU-optimized locally, GPU-accelerated on RunPod
 
-## 💰 **Cost Breakdown**
+## 💰 **Cost Breakdown (RunPod)**
 
 - **RTX 4090**: $0.60/hour
 - **Total Training**: 2-8 hours
@@ -47,46 +48,68 @@ chmod +x runpod/start_training.sh
 
 ## 📊 **Expected Timeline**
 
-| Phase | Duration | What Happens |
-|-------|----------|--------------|
-| **Setup** | 5-10 min | Dependencies + dataset download |
-| **Training** | 2-8 hours | GPU-accelerated model training |
-| **Results** | Immediate | Checkpoints + logs saved |
+| Environment | Setup | Training | Total |
+|-------------|-------|----------|-------|
+| **Local CPU** | 5 min | 25-50 hours | 1-2 days |
+| **RunPod GPU** | 5 min | 2-8 hours | 2-8 hours |
+
+## ✨ **Smart Features**
+
+### **Automatic Environment Detection**
+- **Local**: CPU optimization, smaller batch sizes, fewer workers
+- **RunPod**: GPU acceleration, larger batch sizes, more workers
+
+### **Consistent Training Logic**
+- **Same Script**: `runpod/train_on_runpod.py` works everywhere
+- **Same Model**: Consistent architecture and training approach
+- **Same Results**: Reproducible across environments
+
+### **Intelligent Configuration**
+- **Hardware Detection**: Automatically detects GPU/CPU
+- **Path Handling**: Relative paths work on both local and cloud
+- **Progress Tracking**: Environment-appropriate progress indicators
 
 ## 🚨 **Troubleshooting**
 
-**Pod won't start?**
-- Check RunPod status page
-- Try different GPU type
-- Verify payment method
+**Local Issues?**
+- Check virtual environment: `source vap_env/bin/activate`
+- Verify dependencies: `pip install -r requirements.txt`
+- Check dataset: `python runpod/download_dataset.py`
 
-**Dataset download fails?**
-- Check internet connection
-- Run `python runpod/download_dataset.py` manually
-- Check available disk space
+**RunPod Issues?**
+- Check GPU: `nvidia-smi`
+- Verify paths: `ls -la /workspace`
+- Check logs: `tail -f /workspace/logs/training.log`
 
-**Training crashes?**
-- Check GPU memory: `nvidia-smi`
-- Reduce batch size in `runpod_config.yaml`
-- Check logs in `/workspace/logs/`
+## 📚 **Documentation**
 
-## 📚 **Full Documentation**
-
-- **Deployment Guide**: `DEPLOYMENT_GUIDE.md`
-- **Data Strategy**: `DATA_DEPLOYMENT_STRATEGY.md`
-- **Configuration**: `runpod_config.yaml`
+- **Smart Configuration**: `runpod/runpod_config.yaml`
+- **Dataset Setup**: `runpod/download_dataset.py`
+- **Startup Script**: `runpod/start_training.sh`
 
 ## 🎯 **Success Checklist**
 
-- [ ] RunPod instance running with RTX 4090
-- [ ] Repository cloned successfully
-- [ ] Dataset downloaded (337MB)
-- [ ] Training started with GPU acceleration
+- [ ] Environment detected correctly (local vs RunPod)
+- [ ] Dataset downloaded and manifest created
+- [ ] Training started with appropriate optimization
 - [ ] Progress bars showing real-time updates
-- [ ] Checkpoints saving to `/workspace/checkpoints/`
+- [ ] Checkpoints saving to correct location
 
 ---
 
-**Ready to deploy?** 🚀
+## 🆕 **Why Smart Training?**
 
-Your VAP Phase 3 training will be **10-25x faster** on RunPod compared to local CPU training! 
+**Before**: Different scripts for local vs RunPod, inconsistent approaches  
+**Now**: Single script, automatic optimization, consistent results
+
+### **Benefits**
+- ✅ **No More Confusion**: Same command everywhere
+- ✅ **Automatic Optimization**: Best settings for your hardware
+- ✅ **Consistent Results**: Same training logic across environments
+- ✅ **Easy Deployment**: One script to rule them all
+
+---
+
+**Ready to train?** 🚀
+
+Your VAP Phase 3 training will be **10-25x faster** on RunPod compared to local CPU training, and the same script works seamlessly in both environments! 
