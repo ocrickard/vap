@@ -116,7 +116,7 @@ class VAPTurnDetectionTask(pl.LightningModule):
             'vad_labels': vad_labels
         })
         
-        self.log('train_eot_f1', metrics['eot_f1'])
+        self.log('train_eot_f1_200ms', metrics['eot_f1_200ms'])
         self.log('train_hold_shift_acc', metrics['hold_shift_acc'])
         
         return total_loss

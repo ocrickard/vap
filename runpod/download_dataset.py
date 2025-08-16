@@ -35,8 +35,10 @@ def download_file(url, filename, expected_size_mb=None):
     """Download a file with progress bar and size verification"""
     logger.info(f"📥 Downloading {filename} from {url}")
     
-    # Create target directory
-    os.makedirs(os.path.dirname(filename), exist_ok=True)
+    # Create target directory (only if filename has a path)
+    dirname = os.path.dirname(filename)
+    if dirname:  # Only create directory if there's a path component
+        os.makedirs(dirname, exist_ok=True)
     
     # Download with progress bar
     response = requests.get(url, stream=True)

@@ -32,8 +32,18 @@ class SimpleAudioDataset(Dataset):
     def __getitem__(self, idx):
         sample = self.valid_samples[idx]
         
-        # Load audio
-        audio_path = self.audio_root / sample["filename"]
+        # Load audio - handle both filename and audio_path keys
+        if "filename" in sample:
+            audio_path = self.audio_root / sample["filename"]
+        elif "audio_path" in sample:
+            # For LibriSpeech, the audio_path is relative to dev-clean
+            if "librispeech" in str(self.audio_root).lower():
+                audio_path = self.audio_root / "dev-clean" / sample["audio_path"]
+            else:
+                audio_path = self.audio_root / sample["audio_path"]
+        else:
+            raise KeyError(f"Neither 'filename' nor 'audio_path' found in sample: {sample}")
+        
         audio, sr = sf.read(audio_path)
         
         # Convert to mono if stereo
@@ -67,11 +77,14 @@ class SimpleAudioDataset(Dataset):
             'vad_scores': torch.ones(1)  # Dummy VAD score
         }
         
+        # Handle both speaker and speaker_id keys
+        speaker_id = sample.get('speaker_id', sample.get('speaker', 'unknown'))
+        
         return {
             'audio': audio_tensor,
             'sample_rate': sr,
             'duration': len(audio) / sr,
-            'speaker_id': sample['speaker'],
+            'speaker_id': speaker_id,
             'labels': labels
         }
 

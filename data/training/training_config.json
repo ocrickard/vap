@@ -1,0 +1,12 @@
+{
+  "dataset": "synthetic",
+  "sample_rate": 16000,
+  "max_duration": 6.0,
+  "batch_size": 4,
+  "num_workers": 2,
+  "augmentation": {
+    "noise": false,
+    "reverb": false,
+    "speed": false
+  }
+}

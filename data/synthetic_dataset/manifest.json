@@ -1,0 +1,162 @@
+[
+  {
+    "id": "synthetic_000",
+    "filename": "synthetic_000.wav",
+    "duration": 3.0,
+    "sample_rate": 16000,
+    "speaker": "speaker_0",
+    "type": "synthetic"
+  },
+  {
+    "id": "synthetic_001",
+    "filename": "synthetic_001.wav",
+    "duration": 5.0,
+    "sample_rate": 16000,
+    "speaker": "speaker_1",
+    "type": "synthetic"
+  },
+  {
+    "id": "synthetic_002",
+    "filename": "synthetic_002.wav",
+    "duration": 3.0,
+    "sample_rate": 16000,
+    "speaker": "speaker_2",
+    "type": "synthetic"
+  },
+  {
+    "id": "synthetic_003",
+    "filename": "synthetic_003.wav",
+    "duration": 4.0,
+    "sample_rate": 16000,
+    "speaker": "speaker_3",
+    "type": "synthetic"
+  },
+  {
+    "id": "synthetic_004",
+    "filename": "synthetic_004.wav",
+    "duration": 3.0,
+    "sample_rate": 16000,
+    "speaker": "speaker_0",
+    "type": "synthetic"
+  },
+  {
+    "id": "synthetic_005",
+    "filename": "synthetic_005.wav",
+    "duration": 5.0,
+    "sample_rate": 16000,
+    "speaker": "speaker_1",
+    "type": "synthetic"
+  },
+  {
+    "id": "synthetic_006",
+    "filename": "synthetic_006.wav",
+    "duration": 5.0,
+    "sample_rate": 16000,
+    "speaker": "speaker_2",
+    "type": "synthetic"
+  },
+  {
+    "id": "synthetic_007",
+    "filename": "synthetic_007.wav",
+    "duration": 5.0,
+    "sample_rate": 16000,
+    "speaker": "speaker_3",
+    "type": "synthetic"
+  },
+  {
+    "id": "synthetic_008",
+    "filename": "synthetic_008.wav",
+    "duration": 3.0,
+    "sample_rate": 16000,
+    "speaker": "speaker_0",
+    "type": "synthetic"
+  },
+  {
+    "id": "synthetic_009",
+    "filename": "synthetic_009.wav",
+    "duration": 4.0,
+    "sample_rate": 16000,
+    "speaker": "speaker_1",
+    "type": "synthetic"
+  },
+  {
+    "id": "synthetic_010",
+    "filename": "synthetic_010.wav",
+    "duration": 3.0,
+    "sample_rate": 16000,
+    "speaker": "speaker_2",
+    "type": "synthetic"
+  },
+  {
+    "id": "synthetic_011",
+    "filename": "synthetic_011.wav",
+    "duration": 2.0,
+    "sample_rate": 16000,
+    "speaker": "speaker_3",
+    "type": "synthetic"
+  },
+  {
+    "id": "synthetic_012",
+    "filename": "synthetic_012.wav",
+    "duration": 3.0,
+    "sample_rate": 16000,
+    "speaker": "speaker_0",
+    "type": "synthetic"
+  },
+  {
+    "id": "synthetic_013",
+    "filename": "synthetic_013.wav",
+    "duration": 2.0,
+    "sample_rate": 16000,
+    "speaker": "speaker_1",
+    "type": "synthetic"
+  },
+  {
+    "id": "synthetic_014",
+    "filename": "synthetic_014.wav",
+    "duration": 5.0,
+    "sample_rate": 16000,
+    "speaker": "speaker_2",
+    "type": "synthetic"
+  },
+  {
+    "id": "synthetic_015",
+    "filename": "synthetic_015.wav",
+    "duration": 5.0,
+    "sample_rate": 16000,
+    "speaker": "speaker_3",
+    "type": "synthetic"
+  },
+  {
+    "id": "synthetic_016",
+    "filename": "synthetic_016.wav",
+    "duration": 2.0,
+    "sample_rate": 16000,
+    "speaker": "speaker_0",
+    "type": "synthetic"
+  },
+  {
+    "id": "synthetic_017",
+    "filename": "synthetic_017.wav",
+    "duration": 5.0,
+    "sample_rate": 16000,
+    "speaker": "speaker_1",
+    "type": "synthetic"
+  },
+  {
+    "id": "synthetic_018",
+    "filename": "synthetic_018.wav",
+    "duration": 2.0,
+    "sample_rate": 16000,
+    "speaker": "speaker_2",
+    "type": "synthetic"
+  },
+  {
+    "id": "synthetic_019",
+    "filename": "synthetic_019.wav",
+    "duration": 5.0,
+    "sample_rate": 16000,
+    "speaker": "speaker_3",
+    "type": "synthetic"
+  }
+]
