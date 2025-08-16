@@ -36,9 +36,9 @@ class SimpleAudioDataset(Dataset):
         if "filename" in sample:
             audio_path = self.audio_root / sample["filename"]
         elif "audio_path" in sample:
-            # For LibriSpeech, the audio_path is relative to dev-clean
+            # For LibriSpeech, the audio_path is relative to the LibriSpeech root
             if "librispeech" in str(self.audio_root).lower():
-                audio_path = self.audio_root / "dev-clean" / sample["audio_path"]
+                audio_path = self.audio_root / sample["audio_path"]
             else:
                 audio_path = self.audio_root / sample["audio_path"]
         else:

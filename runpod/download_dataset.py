@@ -120,7 +120,7 @@ def setup_dataset_structure():
     """Create the proper dataset directory structure"""
     logger.info("🏗️  Setting up dataset directory structure...")
     
-    # Create directories
+    # Create directories with relative paths
     directories = [
         'data/realtime_dataset',
         'data/realtime_dataset/LibriSpeech',
@@ -138,7 +138,8 @@ def create_manifest_from_downloaded_data():
     """Create manifest.json from the downloaded LibriSpeech data"""
     logger.info("📝 Creating manifest from downloaded data...")
     
-    librispeech_path = Path("LibriSpeech/dev-clean")
+    # Use relative paths for portability
+    librispeech_path = Path("data/realtime_dataset/LibriSpeech/dev-clean")
     manifest_path = Path("data/realtime_dataset/manifest.json")
     
     if not librispeech_path.exists():
@@ -163,12 +164,12 @@ def create_manifest_from_downloaded_data():
             chapter_id = parts[-2]  # chapter_id
             filename = parts[-1]    # filename.flac
             
-            # Calculate relative path from data root
-            relative_path = str(audio_file.relative_to(Path("LibriSpeech")))
+            # Calculate relative path from LibriSpeech root
+            relative_path = str(audio_file.relative_to(Path("data/realtime_dataset/LibriSpeech")))
             
             entry = {
-                "audio_file": relative_path,
-                "speaker_id": speaker_id,
+                "audio_path": relative_path,  # Changed from "audio_file" to match simple_loader.py
+                "speaker": speaker_id,        # Changed from "speaker_id" to match simple_loader.py
                 "chapter_id": chapter_id,
                 "filename": filename,
                 "duration": None,  # Will be calculated during training

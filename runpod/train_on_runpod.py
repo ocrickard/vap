@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-RunPod-Optimized Training for VAP Turn Detector - Phase 3
+RunPod-Optimized VAP Training Script
 
 This script is specifically designed for GPU-accelerated training on RunPod
-with optimized batch sizes, mixed precision, and cloud storage integration.
+with optimizations for cloud environments.
 """
 
 import os
@@ -26,6 +26,14 @@ import numpy as np
 from tqdm import tqdm
 import threading
 import queue
+
+# Fix Python path to find the vap module
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(current_dir)
+sys.path.insert(0, project_root)
+
+# Now we can import from vap
+from vap.models.vap_model import VAPTurnDetector
 
 # Configure logging for RunPod environment
 logging.basicConfig(
@@ -237,7 +245,7 @@ class RunPodOptimizedTrainingTask(pl.LightningModule):
             self.config = yaml.safe_load(f)
         
         # Create model with optimized architecture
-        from vap.models.vap_model import VAPTurnDetector
+        # from vap.models.vap_model import VAPTurnDetector # This line is now redundant
         
         self.model = VAPTurnDetector(
             hidden_dim=self.config['training'].get('hidden_dim', 128),
@@ -624,11 +632,11 @@ def run_runpod_training():
         
         # 3. Create data loaders
         logger.info("📊 Step 3: Creating GPU-optimized data loaders...")
-        manifest_path = "/workspace/data/realtime_dataset/manifest.json"
-        audio_root = "/workspace/data/realtime_dataset/LibriSpeech/dev-clean"
+        manifest_path = "data/realtime_dataset/manifest.json"
+        audio_root = "data/realtime_dataset/LibriSpeech/dev-clean"
         
         if not Path(manifest_path).exists():
-            logger.error("❌ Dataset not found in RunPod workspace")
+            logger.error("❌ Dataset not found. Please run dataset setup first.")
             return False
         
         train_loader, val_loader = create_runpod_dataloader(
@@ -771,9 +779,9 @@ def run_runpod_training():
 
 if __name__ == "__main__":
     # Create necessary directories
-    os.makedirs("/workspace/logs", exist_ok=True)
-    os.makedirs("/workspace/checkpoints/optimized", exist_ok=True)
-    os.makedirs("/workspace/results", exist_ok=True)
+    os.makedirs("checkpoints/optimized", exist_ok=True)
+    os.makedirs("results", exist_ok=True)
+    os.makedirs("logs", exist_ok=True)
     
     # Run training
     success = run_runpod_training()
