@@ -36,7 +36,7 @@ log_dir = "logs" if not os.path.exists('/workspace') else "/workspace/logs"
 os.makedirs(log_dir, exist_ok=True)
 
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.INFO,  # Back to INFO level
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
         logging.FileHandler(f'{log_dir}/training.log'),

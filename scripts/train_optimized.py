@@ -317,12 +317,21 @@ class OptimizedTrainingTask(pl.LightningModule):
         # Progress tracker
         self.progress_tracker = None
         
+        # Let PyTorch Lightning handle device placement
+        # The trainer will automatically move the model to the correct device
+        logger.info("✅ Model device placement will be handled by PyTorch Lightning")
+        
         logger.info(f"✅ Optimized model created: {sum(p.numel() for p in self.parameters()):,} parameters")
     
     def forward(self, audio_a, audio_b):
         return self.model(audio_a, audio_b)
     
     def training_step(self, batch, batch_idx):
+        # Check if data needs to be moved to GPU
+        if torch.cuda.is_available() and batch['audio_a'].device.type == 'cpu':
+            batch['audio_a'] = batch['audio_a'].cuda()
+            batch['audio_b'] = batch['audio_b'].cuda()
+        
         # Forward pass
         outputs = self.forward(batch['audio_a'], batch['audio_b'])
         
@@ -349,6 +358,11 @@ class OptimizedTrainingTask(pl.LightningModule):
         # Forward pass
         outputs = self.forward(batch['audio_a'], batch['audio_b'])
         
+        # Check if data needs to be moved to GPU
+        if torch.cuda.is_available() and batch['audio_a'].device.type == 'cpu':
+            batch['audio_a'] = batch['audio_a'].cuda()
+            batch['audio_b'] = batch['audio_b'].cuda()
+        
         # Generate real VAP labels
         labels = self._generate_real_labels(batch, outputs)
         
@@ -370,6 +384,11 @@ class OptimizedTrainingTask(pl.LightningModule):
             self.progress_tracker.update_val_batch(batch_idx, {**losses, **metrics})
         
         return {'val_loss': losses['total'], 'val_metrics': metrics}
+    
+    def on_train_start(self):
+        """Called when training starts"""
+        if self.progress_tracker:
+            self.progress_tracker.start()
     
     def on_train_epoch_start(self):
         """Called at the start of each training epoch"""
@@ -405,10 +424,13 @@ class OptimizedTrainingTask(pl.LightningModule):
         """Generate realistic VAP labels based on audio characteristics"""
         batch_size, seq_len = outputs['vap_logits'].shape[:2]
         
+        # Get the target device from the model outputs
+        target_device = outputs['vap_logits'].device
+        
         # Get audio energy levels for more realistic labeling
         # Ensure proper tensor dimensions
-        audio_a = batch['audio_a']  # [batch, time]
-        audio_b = batch['audio_b']  # [batch, time]
+        audio_a = batch['audio_a'].to(target_device)  # [batch, time]
+        audio_b = batch['audio_b'].to(target_device)  # [batch, time]
         
         # Calculate energy (norm) along time dimension
         audio_a_energy = torch.norm(audio_a, dim=1)  # [batch, time] -> [batch]
@@ -444,10 +466,11 @@ class OptimizedTrainingTask(pl.LightningModule):
     def _create_energy_based_vap_labels(self, energy_a, energy_b, seq_len):
         """Create VAP labels based on audio energy patterns"""
         batch_size = energy_a.shape[0]
+        device = energy_a.device  # Get device from input tensor
         
         # For now, let's use a simpler approach without interpolation
         # Just create basic labels based on the original energy patterns
-        vap_labels = torch.zeros(batch_size, seq_len, dtype=torch.long)
+        vap_labels = torch.zeros(batch_size, seq_len, dtype=torch.long, device=device)
         
         # Create simple VAP patterns
         # Speaker A active, B silent
@@ -478,26 +501,32 @@ class OptimizedTrainingTask(pl.LightningModule):
     def _create_energy_based_eot_labels(self, energy_a, energy_b, seq_len):
         """Create EoT labels based on energy transitions"""
         batch_size = energy_a.shape[0]
+        device = energy_a.device  # Get device from input tensor
         
-        eot_labels = torch.zeros(batch_size, seq_len)
+        eot_labels = torch.zeros(batch_size, seq_len, device=device)
         
         # Simple EoT detection: detect energy drops
         # Speaker A ends turn
         if seq_len > 1:
             eot_a = (energy_a[:, :-1] > 0.1) & (energy_a[:, 1:] < 0.05)
-            eot_labels[:, 1:] = torch.where(eot_a, 1.0, eot_labels[:, 1:])
+            eot_a = eot_a.to(device)
+            eot_labels[:, 1:] = torch.where(eot_a, torch.tensor(1.0, device=device), eot_labels[:, 1:])
             
             # Speaker B ends turn
             eot_b = (energy_b[:, :-1] > 0.1) & (energy_b[:, 1:] < 0.05)
-            eot_labels[:, 1:] = torch.where(eot_b, 1.0, eot_labels[:, 1:])
+            eot_b = eot_b.to(device)
+            eot_labels[:, 1:] = torch.where(eot_b, torch.tensor(1.0, device=device), eot_labels[:, 1:])
+
+
         
         return eot_labels
     
     def _create_backchannel_labels(self, energy_a, energy_b, seq_len):
         """Create backchannel labels"""
         batch_size = energy_a.shape[0]
+        device = energy_a.device  # Get device from input tensor
         
-        backchannel_labels = torch.zeros(batch_size, seq_len)
+        backchannel_labels = torch.zeros(batch_size, seq_len, device=device)
         
         # Simple backchannel detection
         backchannel_mask = (energy_a > 0.1) & (energy_b > 0.05)
@@ -508,8 +537,9 @@ class OptimizedTrainingTask(pl.LightningModule):
     def _create_overlap_labels(self, energy_a, energy_b, seq_len):
         """Create overlap labels"""
         batch_size = energy_a.shape[0]
+        device = energy_a.device  # Get device from input tensor
         
-        overlap_labels = torch.zeros(batch_size, seq_len)
+        overlap_labels = torch.zeros(batch_size, seq_len, device=device)
         
         # Simple overlap detection
         overlap_mask = (energy_a > 0.1) & (energy_b > 0.1)
@@ -520,8 +550,9 @@ class OptimizedTrainingTask(pl.LightningModule):
     def _create_energy_based_vad_labels(self, energy_a, energy_b, seq_len):
         """Create VAD labels based on audio energy"""
         batch_size = energy_a.shape[0]
+        device = energy_a.device  # Get device from input tensor
         
-        vad_labels = torch.zeros(batch_size, seq_len, 2)
+        vad_labels = torch.zeros(batch_size, seq_len, 2, device=device)
         
         # Simple VAD based on energy thresholds
         vad_labels[:, :, 0] = (energy_a > 0.05).float()  # Speaker A VAD
