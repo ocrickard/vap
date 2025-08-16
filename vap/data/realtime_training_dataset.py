@@ -15,13 +15,24 @@ import torch
 class RealTrainingDataset(Dataset):
     """Real LibriSpeech dataset for training turn detection"""
     
-    def __init__(self, manifest_path, audio_root, max_duration):
+    def __init__(self, manifest_path, audio_root, max_duration, split='train'):
         self.audio_root = Path(audio_root)
         self.max_duration = max_duration
+        self.split = split
         
         # Load manifest
         with open(manifest_path, 'r') as f:
-            self.manifest = json.load(f)
+            manifest_data = json.load(f)
+        
+        # Extract entries from manifest structure
+        if 'entries' in manifest_data:
+            self.manifest = manifest_data['entries']
+        else:
+            self.manifest = manifest_data  # Fallback for old format
+        
+        # Filter by split if specified
+        if split in ['train', 'val']:
+            self.manifest = [item for item in self.manifest if item.get('split') == split]
         
         # Filter by duration and create speaker pairs
         self.samples = self._create_speaker_pairs()
@@ -103,26 +114,22 @@ class RealTrainingDataset(Dataset):
     
     def _create_training_labels(self, audio_a, audio_b):
         """Create realistic training labels that match the expected format"""
-        # For now, we'll create simple labels that the training task can handle
-        # The actual sequence length will be determined by the model's forward pass
+        # Get the actual sequence length from the audio
+        seq_len = len(audio_a)
         
-        # Create a reasonable sequence length (this will be adjusted by the training task)
-        # We'll use a fixed size that's large enough for most audio lengths
-        seq_len = 1000  # This will be adjusted by the training task
-        
-        # Create VAP pattern labels (20 classes)
+        # Create VAP pattern labels (20 classes) - this should match the model's output
         vap_labels = torch.randint(0, 20, (seq_len,))
         
-        # Create EoT labels (probability of end-of-turn)
-        eot_labels = torch.rand(seq_len) * 0.3  # Low probability for single speaker
+        # Create EoT labels (probability of end-of-turn) - binary labels
+        eot_labels = torch.zeros(seq_len)
         
-        # Create backchannel labels (probability of backchannel)
-        backchannel_labels = torch.rand(seq_len) * 0.1  # Very low for single speaker
+        # Create backchannel labels (probability of backchannel) - binary labels  
+        backchannel_labels = torch.zeros(seq_len)
         
-        # Create overlap labels (probability of overlap)
-        overlap_labels = torch.rand(seq_len) * 0.05  # Very low for single speaker
+        # Create overlap labels (probability of overlap) - binary labels
+        overlap_labels = torch.zeros(seq_len)
         
-        # Create VAD labels (voice activity for both speakers)
+        # Create VAD labels (voice activity for both speakers) - binary labels [seq_len, 2]
         vad_labels = torch.zeros(seq_len, 2)
         vad_labels[:, 0] = 1.0  # Speaker A is always active
         vad_labels[:, 1] = 0.0  # Speaker B is silent
