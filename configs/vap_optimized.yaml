@@ -1,0 +1,154 @@
+# VAP Optimized Model Configuration
+# Phase 3: Model Optimization and Real Data Integration
+
+model:
+  name: "vap_optimized"
+  hidden_dim: 128  # Increased from 64 (baseline)
+  num_layers: 2    # Increased from 1 (baseline)
+  num_heads: 4     # Increased from 2 (baseline)
+  dropout: 0.15    # Slightly increased for regularization
+  feature_dim: 80
+  sample_rate: 16000
+  future_horizon: 2.0
+  time_bins: [0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0]
+  use_neural_codec: false
+
+training:
+  batch_size: 16        # Reduced for larger model
+  num_epochs: 50        # Increased training time
+  learning_rate: 5e-5   # Reduced for stability
+  weight_decay: 1e-4    # Increased regularization
+  warmup_epochs: 3      # Gradual warmup
+  gradient_clip_val: 1.0
+  accumulate_grad_batches: 2
+  
+  # Optimized loss weights based on baseline results
+  vap_loss_weight: 2.0      # Increased - main task
+  eot_loss_weight: 3.0      # Increased - critical for turn detection
+  backchannel_loss_weight: 1.5
+  overlap_loss_weight: 1.5
+  vad_loss_weight: 1.0      # Increased - important for audio understanding
+  
+  # Advanced augmentation
+  use_augmentation: true
+  noise_snr_range: [5, 10, 15, 20]  # More realistic noise levels
+  speed_perturb: [0.9, 0.95, 1.0, 1.05, 1.1]
+  pitch_shift: [-2, -1, 0, 1, 2]   # Pitch augmentation
+  time_stretch: [0.9, 1.0, 1.1]    # Time stretching
+  dropout_prob: 0.15
+
+data:
+  # Enhanced dataset configuration
+  train_datasets:
+    - name: "librispeech_dev_clean"
+      weight: 1.0
+      max_duration: 30.0
+      use_augmentation: true
+  
+  val_datasets:
+    - name: "librispeech_dev_clean"
+      weight: 1.0
+      max_duration: 30.0
+      use_augmentation: false
+  
+  # Global data settings
+  max_duration: 30.0  # Maximum audio duration in seconds
+  
+  # Audio processing (optimized)
+  sample_rate: 16000
+  hop_length: 160  # 10ms at 16kHz
+  win_length: 400  # 25ms at 16kHz
+  n_mels: 80
+  f_min: 0
+  f_max: 8000
+  
+  # Enhanced label generation
+  min_gap_ms: 150  # More sensitive turn detection
+  max_gap_ms: 800  # Realistic conversation gaps
+  backchannel_max_duration: 300  # Shorter backchannels
+  overlap_threshold: 0.3         # Overlap detection sensitivity
+
+optimization:
+  optimizer: "adamw"
+  scheduler: "cosine_with_restarts"  # Better convergence
+  min_lr: 1e-6
+  max_lr: 1e-3
+  
+  # Mixed precision for efficiency
+  use_amp: true
+  
+  # Gradient accumulation
+  effective_batch_size: 32
+  
+  # Learning rate scheduling
+  lr_scheduler_params:
+    T_0: 10  # Restart every 10 epochs
+    T_mult: 2  # Double restart interval
+    eta_min: 1e-6
+
+logging:
+  log_every_n_steps: 50      # More frequent logging
+  val_every_n_epochs: 1
+  save_top_k: 5              # Keep more checkpoints
+  monitor: "val_overall_accuracy"  # Monitor overall performance
+  mode: "max"
+  
+  # Additional metrics
+  track_metrics:
+    - "vap_accuracy"
+    - "eot_f1_200ms"
+    - "eot_f1_500ms"
+    - "backchannel_auc"
+    - "overlap_f1"
+    - "vad_accuracy"
+
+checkpointing:
+  save_dir: "checkpoints/optimized"
+  filename: "vap_optimized_{epoch:02d}_{val_overall_accuracy:.3f}"
+  every_n_epochs: 1
+  
+  # Model selection
+  save_best_only: true
+  save_last: true
+
+inference:
+  # Streaming inference settings
+  buffer_duration: 6.0  # seconds
+  hop_duration: 0.02    # 20ms
+  smoothing_window: 7   # Increased for stability
+  
+  # Optimized detection thresholds
+  eot_threshold: 0.4    # More sensitive
+  backchannel_threshold: 0.25  # More sensitive
+  overlap_threshold: 0.35     # More sensitive
+  min_gap_ms: 150
+
+# Hardware configuration
+hardware:
+  accelerator: "auto"  # Auto-detect
+  devices: 1
+  precision: "32"  # Standard precision to avoid dtype issues
+  strategy: "auto"
+
+# Advanced training features
+advanced:
+  # Early stopping
+  early_stopping:
+    monitor: "val_overall_accuracy"
+    patience: 8
+    min_delta: 0.001
+  
+  # Model checkpointing
+  model_checkpoint:
+    monitor: "val_overall_accuracy"
+    save_top_k: 3
+    mode: "max"
+  
+  # Learning rate monitoring
+  lr_monitor:
+    logging_interval: "step"
+  
+  # Gradient monitoring
+  gradient_monitor:
+    log_grad_norm: true
+    log_grad_histogram: false  # Can be expensive 

@@ -1,0 +1,109 @@
+# VAP Light Model Configuration
+# Optimized for small size and fast inference
+
+model:
+  name: "vap_light"
+  hidden_dim: 192
+  num_layers: 2
+  num_heads: 4
+  dropout: 0.1
+  feature_dim: 80
+  sample_rate: 16000
+  future_horizon: 2.0
+  time_bins: [0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0]
+  use_neural_codec: false
+
+training:
+  batch_size: 32
+  num_epochs: 100
+  learning_rate: 1e-4
+  weight_decay: 1e-5
+  warmup_epochs: 2
+  gradient_clip_val: 1.0
+  accumulate_grad_batches: 2
+  
+  # Loss weights
+  vap_loss_weight: 1.0
+  eot_loss_weight: 2.0
+  backchannel_loss_weight: 1.5
+  overlap_loss_weight: 1.0
+  vad_loss_weight: 0.5
+  
+  # Augmentation
+  use_augmentation: true
+  noise_snr_range: [0, 5, 10, 20]
+  speed_perturb: [0.9, 1.0, 1.1]
+  dropout_prob: 0.1
+
+data:
+  # Dataset configuration
+  train_datasets:
+    - name: "ami"
+      weight: 1.0
+      max_duration: 20.0  # seconds per sample
+      use_headset: true
+  
+  val_datasets:
+    - name: "ami"
+      weight: 1.0
+      max_duration: 20.0
+      use_headset: true
+    - name: "chime6"
+      weight: 0.5
+      max_duration: 20.0
+      use_headset: false
+  
+  # Audio processing
+  sample_rate: 16000
+  hop_length: 160  # 10ms at 16kHz
+  win_length: 400  # 25ms at 16kHz
+  n_mels: 80
+  f_min: 0
+  f_max: 8000
+  
+  # Label generation
+  min_gap_ms: 200
+  max_gap_ms: 1000
+  backchannel_max_duration: 400  # ms
+
+optimization:
+  optimizer: "adamw"
+  scheduler: "cosine"
+  min_lr: 1e-6
+  
+  # Mixed precision
+  use_amp: true
+  
+  # Gradient accumulation
+  effective_batch_size: 64
+
+logging:
+  log_every_n_steps: 100
+  val_every_n_epochs: 1
+  save_top_k: 3
+  monitor: "val_eot_f1_200ms"
+  mode: "max"
+
+checkpointing:
+  save_dir: "checkpoints"
+  filename: "vap_light_{epoch:02d}_{val_eot_f1_200ms:.3f}"
+  every_n_epochs: 1
+
+inference:
+  # Streaming inference settings
+  buffer_duration: 6.0  # seconds
+  hop_duration: 0.02    # 20ms
+  smoothing_window: 5   # frames
+  
+  # Detection thresholds
+  eot_threshold: 0.5
+  backchannel_threshold: 0.3
+  overlap_threshold: 0.4
+  min_gap_ms: 200
+
+# Hardware configuration
+hardware:
+  accelerator: "gpu"
+  devices: 1
+  precision: "16-mixed"
+  strategy: "ddp" 

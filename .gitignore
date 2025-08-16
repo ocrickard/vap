@@ -1,0 +1,219 @@
+# VAP Turn Detector - Git Ignore File
+# Excludes data, checkpoints, logs, and other generated content
+
+# =============================================================================
+# DATA FILES (Large audio files and datasets)
+# =============================================================================
+data/realtime_dataset/LibriSpeech/
+data/realtime_dataset/*.json
+data/realtime_dataset/*.csv
+data/realtime_dataset/*.txt
+
+# Audio files
+*.flac
+*.wav
+*.mp3
+*.m4a
+*.aac
+*.ogg
+
+# Dataset archives
+*.tar.gz
+*.zip
+*.rar
+*.7z
+
+# =============================================================================
+# MODEL CHECKPOINTS AND WEIGHTS
+# =============================================================================
+checkpoints/
+checkpoints/baseline/
+checkpoints/optimized/
+checkpoints/simple_baseline/
+*.ckpt
+*.pth
+*.pt
+*.h5
+*.hdf5
+*.pkl
+*.pickle
+
+# =============================================================================
+# TRAINING LOGS AND RESULTS
+# =============================================================================
+logs/
+results/
+*.log
+*.out
+*.err
+tensorboard_logs/
+wandb/
+
+# =============================================================================
+# PYTHON AND ENVIRONMENT
+# =============================================================================
+# Virtual environments
+vap_env/
+venv/
+env/
+.venv/
+.env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# PyCharm
+.idea/
+
+# VS Code
+.vscode/
+
+# =============================================================================
+# OPERATING SYSTEM
+# =============================================================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.tmp
+*.temp
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# =============================================================================
+# DEVELOPMENT AND TESTING
+# =============================================================================
+# Test coverage
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Profiling
+*.prof
+*.lprof
+
+# =============================================================================
+# TEMPORARY FILES
+# =============================================================================
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# =============================================================================
+# SPECIFIC TO VAP PROJECT
+# =============================================================================
+# Local configuration overrides
+configs/local_*.yaml
+configs/*_local.yaml
+
+# User-specific files
+user_config.yaml
+personal_settings.yaml
+
+# Debug and test outputs
+debug_output/
+test_results/
+temp_output/
+
+# =============================================================================
+# SECURITY AND SENSITIVE DATA
+# =============================================================================
+# API keys and secrets
+.env
+.env.local
+.env.production
+secrets.yaml
+api_keys.yaml
+credentials.json
+
+# SSH keys
+id_rsa
+id_rsa.pub
+*.pem
+*.key
+
+# =============================================================================
+# LARGE FILES AND ARCHIVES
+# =============================================================================
+# Large model files
+*.bin
+*.safetensors
+*.gguf
+*.ggml
+
+# Dataset files
+*.h5
+*.hdf5
+*.npz
+*.npy 

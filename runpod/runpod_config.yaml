@@ -1,0 +1,64 @@
+# RunPod Training Configuration for VAP Turn Detector - Phase 3
+# This configuration enables GPU-accelerated training on RunPod
+
+# Pod Configuration
+pod:
+  name: "vap-phase3-training"
+  image: "runpod/pytorch:2.1.1-py3.10-cuda12.1.0"
+  gpu_type: "RTX 4090"  # 24GB VRAM - excellent for our model size
+  gpu_count: 1
+  cpu_count: 8
+  memory: 32  # GB
+  volume_size: 50  # GB for dataset and checkpoints
+  
+# Training Environment
+environment:
+  python_version: "3.10"
+  cuda_version: "12.1"
+  pytorch_version: "2.1.1"
+  
+# Dataset and Storage
+storage:
+  dataset_path: "/workspace/data"
+  checkpoint_path: "/workspace/checkpoints"
+  results_path: "/workspace/results"
+  logs_path: "/workspace/logs"
+  
+# Training Parameters (optimized for GPU)
+training:
+  batch_size: 32  # Increased for GPU
+  num_epochs: 50
+  learning_rate: 5e-5
+  weight_decay: 1e-4
+  gradient_clip_val: 1.0
+  accumulate_grad_batches: 1
+  
+# Hardware Optimization
+hardware:
+  precision: "16-mixed"  # Enable mixed precision for GPU
+  accelerator: "gpu"
+  devices: 1
+  strategy: "auto"
+  
+# Monitoring and Logging
+logging:
+  log_every_n_steps: 10
+  val_every_n_epochs: 1
+  save_top_k: 3
+  monitor: "val_overall_accuracy"
+  mode: "max"
+  
+# Checkpointing
+checkpointing:
+  save_dir: "/workspace/checkpoints/optimized"
+  filename: "vap_optimized_{epoch:02d}_{val_overall_accuracy:.4f}"
+  
+# Advanced Features
+advanced:
+  early_stopping:
+    monitor: "val_overall_accuracy"
+    patience: 10
+    min_delta: 0.001
+  model_checkpoint: true
+  lr_monitor: true
+  gradient_monitor: true 
