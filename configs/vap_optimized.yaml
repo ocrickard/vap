@@ -14,13 +14,13 @@ model:
   use_neural_codec: false
 
 training:
-  batch_size: 32        # Increased for better GPU utilization
+  batch_size: 24        # Balanced for stability and performance
   num_epochs: 50        # Increased training time
   learning_rate: 5e-5   # Reduced for stability
   weight_decay: 1e-4    # Increased regularization
   warmup_epochs: 3      # Gradual warmup
   gradient_clip_val: 1.0
-  accumulate_grad_batches: 4  # Increased for effective batch size of 128
+  accumulate_grad_batches: 4  # Effective batch size of 96 (24 * 4)
   
   # Optimized loss weights based on baseline results
   vap_loss_weight: 2.0      # Increased - main task
