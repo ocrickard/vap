@@ -293,6 +293,11 @@ class OptimizedTrainingTask(pl.LightningModule):
         with open(config_path, 'r') as f:
             self.config = yaml.safe_load(f)
         
+        # Enable Tensor Core optimizations for RTX 4090
+        if torch.cuda.is_available():
+            torch.set_float32_matmul_precision('high')  # Best performance, slight precision trade-off
+            logger.info("🚀 Tensor Core optimization enabled for RTX 4090")
+        
         # Create model with optimized architecture
         from vap.models.vap_model import VAPTurnDetector
         
@@ -764,6 +769,11 @@ def run_optimized_training():
     """Run optimized training with enhanced features"""
     logger.info("🚀 Starting Optimized VAP Training (Phase 3)")
     logger.info("="*70)
+    
+    # Enable Tensor Core optimizations globally
+    if torch.cuda.is_available():
+        torch.set_float32_matmul_precision('high')
+        logger.info("🚀 Global Tensor Core optimization enabled for RTX 4090")
     
     try:
         # 1. Load configuration
