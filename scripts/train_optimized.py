@@ -324,6 +324,15 @@ class OptimizedTrainingTask(pl.LightningModule):
         # Progress tracker
         self.progress_tracker = None
         
+        # Memory optimizations
+        self.automatic_optimization = True
+        self.gradient_clip_val = 1.0
+        
+        # Enable memory efficient attention if available
+        if hasattr(torch.nn.functional, 'scaled_dot_product_attention'):
+            torch.backends.cuda.enable_flash_sdp(True)
+            torch.backends.cuda.enable_mem_efficient_sdp(True)
+        
         # Let PyTorch Lightning handle device placement
         # The trainer will automatically move the model to the correct device
         logger.info("✅ Model device placement will be handled by PyTorch Lightning")
@@ -354,6 +363,13 @@ class OptimizedTrainingTask(pl.LightningModule):
         
         # Log learning rate
         self.log('train_lr', self.optimizers().param_groups[0]['lr'], prog_bar=True)
+        
+        # Log memory usage for optimization monitoring
+        if torch.cuda.is_available():
+            memory_allocated = torch.cuda.memory_allocated() / 1024**3  # GB
+            memory_reserved = torch.cuda.memory_reserved() / 1024**3    # GB
+            self.log('train_gpu_memory_allocated', memory_allocated, prog_bar=False)
+            self.log('train_gpu_memory_reserved', memory_reserved, prog_bar=False)
         
         # Update progress tracker
         if self.progress_tracker:
@@ -719,7 +735,7 @@ class OptimizedTrainingTask(pl.LightningModule):
             }
         }
 
-def create_optimized_dataloader(manifest_path, audio_root, batch_size=16, max_duration=30.0):
+def create_optimized_dataloader(manifest_path, audio_root, batch_size=32, max_duration=30.0):
     """Create optimized data loader with enhanced features"""
     from vap.data.realtime_training_dataset import create_real_training_loader
     
@@ -730,6 +746,17 @@ def create_optimized_dataloader(manifest_path, audio_root, batch_size=16, max_du
         batch_size=batch_size,
         max_duration=max_duration
     )
+    
+    # Apply additional optimizations if the loaders support it
+    for loader in [train_loader, val_loader]:
+        if hasattr(loader, 'num_workers'):
+            loader.num_workers = 8
+        if hasattr(loader, 'pin_memory'):
+            loader.pin_memory = True
+        if hasattr(loader, 'persistent_workers'):
+            loader.persistent_workers = True
+        if hasattr(loader, 'prefetch_factor'):
+            loader.prefetch_factor = 2
     
     return train_loader, val_loader
 
@@ -774,6 +801,14 @@ def run_optimized_training():
                 max_duration=config['data']['max_duration']
             )
             logger.info("✅ Data loaders created successfully")
+            
+            # Log optimization details
+            logger.info("🚀 Optimization Details:")
+            logger.info(f"   • Batch Size: {config['training']['batch_size']}")
+            logger.info(f"   • Effective Batch Size: {config['training']['batch_size'] * config['training']['accumulate_grad_batches']}")
+            logger.info(f"   • Precision: {config['hardware']['precision']}")
+            logger.info(f"   • Gradient Accumulation: {config['training']['accumulate_grad_batches']}")
+            
         except Exception as e:
             logger.error(f"❌ Failed to create data loaders: {e}")
             import traceback
@@ -840,7 +875,17 @@ def run_optimized_training():
             enable_model_summary=True,
             precision=config['hardware']['precision'],
             accelerator=config['hardware']['accelerator'],
-            devices=config['hardware']['devices']
+            devices=config['hardware']['devices'],
+            
+            # Add these optimizations:
+            sync_batchnorm=False,  # Disable for single GPU
+            deterministic=False,    # Disable for speed
+            benchmark=True,         # Enable cuDNN benchmarking
+            enable_checkpointing=True,
+            
+            # Memory optimizations
+            strategy="auto",
+            plugins=None,
         )
         
         # Initialize progress tracker
